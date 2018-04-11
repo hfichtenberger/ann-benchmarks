@@ -19,6 +19,7 @@ WORKDIR /tmp
 RUN curl -OL https://cmake.org/files/v3.11/cmake-3.11.0-Linux-x86_64.sh
 RUN sh cmake-3.11.0-Linux-x86_64.sh --prefix=/usr/local --exclude-subdir
 
+WORKDIR /home/app
 RUN git clone https://github.com/derohde/knn_test.git
 WORKDIR /home/app/knn_test/build
 RUN cmake -DBOOST_ROOT="/home/app/boost/build" ..
