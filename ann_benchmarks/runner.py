@@ -15,6 +15,7 @@ from ann_benchmarks.datasets import get_dataset, DATASETS
 from ann_benchmarks.algorithms.definitions import Definition, instantiate_algorithm
 from ann_benchmarks.distance import metrics
 from ann_benchmarks.results import store_results
+import KNNTest as kg
 
 
 def run(definition, dataset, count, run_count=3, force_single=False, use_batch_query=False):
@@ -63,13 +64,24 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
                               for v, single_results in zip(X, results)]
                 return [(total / float(len(X)), v) for v in candidates]
 
-            if use_batch_query:
-                results = batch_query(X_test)
-            elif algo.use_threads() and not force_single:
-                pool = multiprocessing.pool.ThreadPool()
-                results = pool.map(single_query, X_test)
-            else:
-                results = [single_query(x) for x in X_test]
+            #if use_batch_query:
+            #    results = batch_query(X_test)
+            #elif algo.use_threads() and not force_single:
+            #    pool = multiprocessing.pool.ThreadPool()
+            #    results = pool.map(single_query, X_test)
+            #else:
+            #    results = [single_query(x) for x in X_test]
+
+            d = X_train.shape[1]
+
+            def query(i: int):
+                return X_train[algo.query(X_train[i, :], count), :]
+
+            ga = kg.KNN_Graph(count)
+            ga.build(X_train)
+            oa = kg.Query_Oracle(lambda x: query(x))
+            toa = kg.KNN_Tester_Oracle(oa)
+            toa.test(ga, count, d, 0.1, 1, 1)
 
             total_time = sum(time for time, _ in results)
             total_candidates = sum(len(candidates) for _, candidates in results)
