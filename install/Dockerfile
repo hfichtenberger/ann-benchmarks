@@ -1,7 +1,8 @@
 FROM ubuntu:16.04
 
 RUN apt-get update
-RUN apt-get install -y python3-numpy python3-scipy python3-pip build-essential curl git
+RUN apt-get install -y python3-numpy python3-scipy python3-pip build-essential git
+RUN apt-get install -y curl
 
 RUN mkdir boost
 WORKDIR /home/app/boost
@@ -23,5 +24,6 @@ WORKDIR /home/app
 RUN git clone https://github.com/derohde/knn_test.git
 WORKDIR /home/app/knn_test
 RUN python3 setup.py install
+RUN python3 -c 'import KNNTest'
 
 ENTRYPOINT ["python3", "run_algorithm.py"]

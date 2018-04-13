@@ -74,7 +74,7 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
 
             d = X_train.shape[1]
 
-            def query(i: int):
+            def query(i):
                 return X_train[algo.query(X_train[i, :], count), :]
 
             ga = kg.KNN_Graph(count)
