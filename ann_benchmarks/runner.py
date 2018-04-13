@@ -75,10 +75,11 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
             d = X_train.shape[1]
 
             def query(i):
-                return X_train[algo.query(X_train[i, :], count), :]
+                return X_train[algo.query(X_train[i, :], count), :].astype('float')
 
             ga = kg.KNN_Graph(count)
-            ga.build(X_train)
+
+            ga.build(kg.Relation(X_train.astype('float')))
             oa = kg.Query_Oracle(lambda x: query(x))
             toa = kg.KNN_Tester_Oracle(oa)
             toa.test(ga, count, d, 0.1, 1, 1)

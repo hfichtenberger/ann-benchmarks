@@ -26,4 +26,4 @@ WORKDIR /home/app/knn_test
 RUN python3 setup.py install
 RUN python3 -c 'import KNNTest'
 
-ENTRYPOINT ["python3", "run_algorithm.py"]
+ENTRYPOINT ["python3", "~/run_algorithm.py"]
