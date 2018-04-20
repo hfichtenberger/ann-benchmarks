@@ -8,6 +8,7 @@ import os
 import psutil
 import requests
 import sys
+import sklearn.neighbors
 import threading
 import time
 
@@ -25,8 +26,8 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
     X_train = numpy.array(D['train'])
     X_test = numpy.array(D['test'])
     distance = D.attrs['distance']
-    print('got a train set of size (%d * %d)' % X_train.shape)
-    print('got %d queries' % len(X_test))
+    print('Got a train set of size (%d * %d)' % X_train.shape)
+    print('Got %d queries' % len(X_test))
 
     try:
         t0 = time.time()
@@ -40,73 +41,31 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
         best_search_time = float('inf')
         for i in range(run_count):
             print('Run %d/%d...' % (i+1, run_count))
-            n_items_processed = [0]  # a bit dumb but can't be a scalar since of Python's scoping rules
 
-            def single_query(v):
-                start = time.time()
-                candidates = algo.query(v, count)
-                total = (time.time() - start)
-                candidates = [(int(idx), float(metrics[distance]['distance'](v, X_train[idx])))
-                              for idx in candidates]
-                n_items_processed[0] += 1
-                if n_items_processed[0] % 1000 == 0:
-                    print('Processed %d/%d queries...' % (n_items_processed[0], X_test.shape[0]))
-                if len(candidates) > count:
-                    print('warning: algorithm %s returned %d results, but count is only %d)' % (algo.name, len(candidates), count))
-                return (total, candidates)
+            print('  Calculating distance...')
+            bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='brute', metric='l2')
+            bf_nn.fit(X_train)
+            n = X_train.shape[0]
+            wrong_edges = 0
+            for i in range(n):
+                algonghs = algo.query(X_train[i, :], count)
+                brutenghs = bf_nn.kneighbors([X_train[i, :]], return_distance=False, n_neighbors=count)[0]
+                wrong_edges += numpy.setdiff1d(brutenghs, algonghs).shape[0]
+            print('  -> Distance: {:.{prec}f}'.format(wrong_edges / n*count, prec=3))
 
-            def batch_query(X):
-                start = time.time()
-                result = algo.batch_query(X, count)
-                total = (time.time() - start)
-                candidates = [[(int(idx), float(metrics[distance]['distance'](v, X_train[idx])))
-                               for idx in single_results]
-                              for v, single_results in zip(X, results)]
-                return [(total / float(len(X)), v) for v in candidates]
-
-            #if use_batch_query:
-            #    results = batch_query(X_test)
-            #elif algo.use_threads() and not force_single:
-            #    pool = multiprocessing.pool.ThreadPool()
-            #    results = pool.map(single_query, X_test)
-            #else:
-            #    results = [single_query(x) for x in X_test]
-
+            print('  Testing...')
             d = X_train.shape[1]
-
             def query(i):
                 return X_train[algo.query(X_train[i, :], count), :].astype('float')
-
             ga = kg.KNN_Graph(count)
-
             ga.build(kg.Relation(X_train.astype('float')))
-            oa = kg.Query_Oracle(lambda x: query(x))
+            oa = kg.Query_Oracle(query)
             toa = kg.KNN_Tester_Oracle(oa)
-            toa.test(ga, count, d, 0.1, 1, 1)
+            result = toa.test(ga, count, d, 0.5, 0.001, 0.5)
+            print('  -> Decision {} in time {:.{prec}f}, query time of that {:.{prec}f}'
+                  .format(result.decision, result.total_time, result.query_time, prec=3))
 
-            total_time = sum(time for time, _ in results)
-            total_candidates = sum(len(candidates) for _, candidates in results)
-            search_time = total_time / len(X_test)
-            avg_candidates = total_candidates / len(X_test)
-            best_search_time = min(best_search_time, search_time)
-
-        verbose = hasattr(algo, "query_verbose")
-        attrs = {
-            "batch_mode": use_batch_query,
-            "build_time": build_time,
-            "best_search_time": best_search_time,
-            "candidates": avg_candidates,
-            "expect_extra": verbose,
-            "index_size": index_size,
-            "name": algo.name,
-            "run_count": run_count,
-            "run_alone": force_single,
-            "distance": distance,
-            "count": int(count),
-            "algo": definition.algorithm,
-            "dataset": dataset
-        }
-        store_results(dataset, count, definition, attrs, results)
+        #store_results(dataset, count, definition, attrs, results)
     finally:
         algo.done()
 
