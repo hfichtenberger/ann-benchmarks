@@ -9,7 +9,7 @@ WORKDIR /home/app/boost
 RUN curl -OL https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.gz
 RUN tar -xzf boost_1_64_0.tar.gz
 WORKDIR /home/app/boost/boost_1_64_0
-RUN ./bootstrap.sh --prefix=/home/app/boost/build --with-libraries=system,python --with-python=/usr/bin/python3
+RUN ./bootstrap.sh --prefix=/home/app/boost/build --with-libraries=system,chrono,python --with-python=/usr/bin/python3
 RUN ./b2 install
 
 WORKDIR /home/app
