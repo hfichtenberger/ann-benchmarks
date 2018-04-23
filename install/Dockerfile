@@ -16,6 +16,9 @@ WORKDIR /home/app
 COPY requirements.txt run_algorithm.py ./
 RUN pip3 install -rrequirements.txt
 
+RUN pip3 install scikit-learn
+RUN python3 -c 'import sklearn'
+
 WORKDIR /tmp
 RUN curl -OL https://cmake.org/files/v3.11/cmake-3.11.0-Linux-x86_64.sh
 RUN sh cmake-3.11.0-Linux-x86_64.sh --prefix=/usr/local --exclude-subdir

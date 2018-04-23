@@ -43,7 +43,7 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
             print('Run %d/%d...' % (i+1, run_count))
 
             print('  Calculating distance...')
-            bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='brute', metric='l2')
+            bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='auto', metric='l2')
             bf_nn.fit(X_train)
             n = X_train.shape[0]
             wrong_edges = 0
@@ -51,7 +51,7 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
                 algonghs = algo.query(X_train[i, :], count)
                 brutenghs = bf_nn.kneighbors([X_train[i, :]], return_distance=False, n_neighbors=count)[0]
                 wrong_edges += numpy.setdiff1d(brutenghs, algonghs).shape[0]
-            print('  -> Distance: {:.{prec}f}'.format(wrong_edges / n*count, prec=3))
+            print('  -> Distance: {:.{prec}f}'.format(wrong_edges / (n*count), prec=3))
 
             print('  Testing...')
             d = X_train.shape[1]
@@ -61,9 +61,16 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
             ga.build(kg.Relation(X_train.astype('float')))
             oa = kg.Query_Oracle(query)
             toa = kg.KNN_Tester_Oracle(oa)
-            result = toa.test(ga, count, d, 0.5, 0.001, 0.5)
-            print('  -> Decision {} in time {:.{prec}f}, query time of that {:.{prec}f}'
-                  .format(result.decision, result.total_time, result.query_time, prec=3))
+            toa.c1_auto_calculation = False
+            c1_set = [0.05, 0.5, 5]
+            c2_set = [0.001, 0.01, 0.1]
+            for x in c1_set:
+                for y in c2_set:
+                    toa.c1 = x
+                    toa.c2 = y
+                    result = toa.test(ga, count, 0.5)
+                    print('  -> Decision {} in time {:.{prec}f}, query time of that {:.{prec}f}, with c1={:.{prec}f}, c2={:.{prec}f}'
+                          .format(result.decision, result.total_time, result.query_time, x, y, prec=5))
 
         #store_results(dataset, count, definition, attrs, results)
     finally:
