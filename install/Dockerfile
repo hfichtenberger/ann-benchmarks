@@ -25,8 +25,10 @@ RUN sh cmake-3.11.0-Linux-x86_64.sh --prefix=/usr/local --exclude-subdir
 
 WORKDIR /home/app
 RUN git clone https://github.com/derohde/knn_test.git
+
 WORKDIR /home/app/knn_test
 RUN python3 setup.py install
 RUN python3 -c 'import KNNTest'
 
+WORKDIR /home/app
 ENTRYPOINT ["python3", "~/run_algorithm.py"]
