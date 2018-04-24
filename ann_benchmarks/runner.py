@@ -151,6 +151,7 @@ def run_docker(definition, dataset, count, runs, timeout=5*3600, mem_limit=None)
                 text = colors.color(line.decode().rstrip(), fg='yellow')
                 print(text)
                 f.write("{}\n".format(text))
+                f.flush()
 
     t = threading.Thread(target=stream_logs)#, daemon=True)
     t.start()
