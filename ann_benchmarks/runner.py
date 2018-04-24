@@ -118,7 +118,7 @@ def run_from_cmdline():
     run(definition, args.dataset, args.count)
 
 
-def run_docker(definition, dataset, count, runs, timeout=3*3600, mem_limit=None):
+def run_docker(definition, dataset, count, runs, timeout=5*3600, mem_limit=None):
     cmd = ['--dataset', dataset,
            '--algorithm', definition.algorithm,
            '--module', definition.module,
@@ -145,10 +145,14 @@ def run_docker(definition, dataset, count, runs, timeout=3*3600, mem_limit=None)
 
     def stream_logs():
         import colors
-        for line in container.logs(stream=True):
-            print(colors.color(line.decode().rstrip(), fg='yellow'))
+        with open("results/log.txt", "a") as f:
+            f.write("{} {} {}\n".format(dataset, definition.algorithm, str(count)))
+            for line in container.logs(stream=True, stdout=True, stderr=True):
+                text = colors.color(line.decode().rstrip(), fg='yellow')
+                print(text)
+                f.write("{}\n".format(text))
 
-    t = threading.Thread(target=stream_logs, daemon=True)
+    t = threading.Thread(target=stream_logs)#, daemon=True)
     t.start()
     try:
         exit_code = container.wait(timeout=timeout)
