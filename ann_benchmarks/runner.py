@@ -43,7 +43,7 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
             print('Run %d/%d...' % (i+1, run_count))
 
             print('  Calculating distance...')
-            bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='auto', metric='l2')
+            bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='auto', metric='l2', n_jobs=12)
             bf_nn.fit(X_train)
             n = X_train.shape[0]
             wrong_edges = 0
