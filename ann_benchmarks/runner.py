@@ -27,15 +27,13 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
     X_test = numpy.array(D['test'])
     distance = D.attrs['distance']
     neighbors = D['neighbors']
-    
-    # X_test ist Teilmenge von X_train, wir haben die neighbors fuer X_test, daher testen wir X_test
 
     print('Got a train set of size (%d * %d)' % X_train.shape)
     print('Got %d queries' % len(X_test))
     try:
         t0 = time.time()
         index_size_before = algo.get_index_size("self")
-        algo.fit(X_test)
+        algo.fit(X_train)
         build_time = time.time() - t0
         index_size = algo.get_index_size("self") - index_size_before
         print('Built index in', build_time)
@@ -48,18 +46,18 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
             print('  Calculating distance...')
                             
             n = X_test.shape[0]
-            wrong_edges = 0
+            wrong_edges = 0.0
             for i in range(n):
                 algonghs = algo.query(X_test[i], count)
                 brutenghs = neighbors[i, : count]
-                wrong_edges += numpy.setdiff1d(brutenghs, algonghs).shape[0]
+                wrong_edges += len(numpy.setdiff1d(brutenghs, algonghs))
 
-            print('  -> Distance: {:.{prec}f}'.format(wrong_edges / (n*count), prec=3))
+            print('  -> Distance in terms of test-set: {:.{prec}f}'.format(wrong_edges / (n*count), prec=3))
 
             print('  Testing...')
             
             def query(i):
-                return X_test[algo.query(X_test[i], count), :].astype('float')
+                return X_train[algo.query(X_test[i], count)].astype('float')
                 
             ga = kg.KNN_Graph(count)
             ga.build(X_test.astype('float'))
