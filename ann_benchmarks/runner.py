@@ -26,13 +26,16 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
     X_train = numpy.array(D['train'])
     X_test = numpy.array(D['test'])
     distance = D.attrs['distance']
+    neighbors = D['neighbors']
+    
+    # X_test ist Teilmenge von X_train, wir haben die neighbors fuer X_test, daher testen wir X_test
+
     print('Got a train set of size (%d * %d)' % X_train.shape)
     print('Got %d queries' % len(X_test))
-
     try:
         t0 = time.time()
         index_size_before = algo.get_index_size("self")
-        algo.fit(X_train)
+        algo.fit(X_test)
         build_time = time.time() - t0
         index_size = algo.get_index_size("self") - index_size_before
         print('Built index in', build_time)
@@ -43,25 +46,27 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
             print('Run %d/%d...' % (i+1, run_count))
 
             print('  Calculating distance...')
-            bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='auto', metric='l2', n_jobs=12)
-            bf_nn.fit(X_train)
-            n = X_train.shape[0]
+                            
+            n = X_test.shape[0]
             wrong_edges = 0
             for i in range(n):
-                algonghs = algo.query(X_train[i, :], count)
-                brutenghs = bf_nn.kneighbors([X_train[i, :]], return_distance=False, n_neighbors=count)[0]
+                algonghs = algo.query(X_test[i], count)
+                brutenghs = neighbors[i, : count]
                 wrong_edges += numpy.setdiff1d(brutenghs, algonghs).shape[0]
+
             print('  -> Distance: {:.{prec}f}'.format(wrong_edges / (n*count), prec=3))
 
             print('  Testing...')
-            d = X_train.shape[1]
+            
             def query(i):
-                return X_train[algo.query(X_train[i, :], count), :].astype('float')
+                return X_test[algo.query(X_test[i], count), :].astype('float')
+                
             ga = kg.KNN_Graph(count)
-            ga.build(kg.Relation(X_train.astype('float')))
-            oa = kg.Query_Oracle(query)
-            toa = kg.KNN_Tester_Oracle(oa)
+            ga.build(X_test.astype('float'))
+            
+            toa = kg.KNN_Tester_Oracle(kg.Query_Oracle(query))
             toa.c1_auto_calculation = False
+            
             c1_set = [0.05, 0.5, 5]
             c2_set = [0.001, 0.01, 0.1]
             for x in c1_set:
