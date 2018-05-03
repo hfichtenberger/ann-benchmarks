@@ -11,6 +11,7 @@ import sys
 import sklearn.neighbors
 import threading
 import time
+import h5py
 
 from ann_benchmarks.datasets import get_dataset, DATASETS
 from ann_benchmarks.algorithms.definitions import Definition, instantiate_algorithm
@@ -24,12 +25,25 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
 
     D = get_dataset(dataset)
     X_train = numpy.array(D['train'])
-    X_test = numpy.array(D['test'])
     distance = D.attrs['distance']
     neighbors = D['neighbors']
-
+    try:
+        all_neighbors = D['neighbors_train']
+    except:
+        print("all nearest neighbors not calculated. Calculating...")
+        filename = D.filename
+        with h5py.File(filename, 'a') as f:
+            tneighbors = numpy.empty((X_train.shape[0], 100))
+            bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='auto', metric='l2', n_jobs=4)
+            bf_nn.fit(X_train)
+            print("Saving all neighbors...")
+            for i in range(neighbors.shape[0]):
+                brutenghs = bf_nn.kneighbors([X_train[i, :]], return_distance=False, n_neighbors=100)
+                tneighbors[i, :] = brutenghs
+            f.create_dataset('neighbors_train', data=tneighbors)
+            all_neighbors = tneighbors
+        
     print('Got a train set of size (%d * %d)' % X_train.shape)
-    print('Got %d queries' % len(X_test))
     try:
         t0 = time.time()
         index_size_before = algo.get_index_size("self")
@@ -45,22 +59,22 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
 
             print('  Calculating distance...')
                             
-            n = X_test.shape[0]
+            n = X_train.shape[0]
             wrong_edges = 0.0
             for i in range(n):
-                algonghs = algo.query(X_test[i], count)
-                brutenghs = neighbors[i, : count]
+                algonghs = algo.query(X_train[i], count)
+                brutenghs = all_neighbors[i, : count]
                 wrong_edges += len(numpy.setdiff1d(brutenghs, algonghs))
 
-            print('  -> Distance in terms of test-set: {:.{prec}f}'.format(wrong_edges / (n*count), prec=3))
+            print('  -> Distance: {:.{prec}f}'.format(wrong_edges / (n*count), prec=3))
 
             print('  Testing...')
             
             def query(i):
-                return X_train[algo.query(X_test[i], count)].astype('float')
+                return X_train[algo.query(X_train[i], count)].astype('float')
                 
             ga = kg.KNN_Graph(count)
-            ga.build(X_test.astype('float'))
+            ga.build(X_train.astype('float'))
             
             toa = kg.KNN_Tester_Oracle(kg.Query_Oracle(query))
             toa.c1_auto_calculation = False
