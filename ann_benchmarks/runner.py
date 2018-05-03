@@ -63,9 +63,6 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
             for i in range(n):
                 algonghs = algo.query(X_train[i], count)
                 brutenghs = all_neighbors[i, : count]
-                print(algonghs)
-                print(brutenghs)
-                print()
                 wrong_edges += len(numpy.setdiff1d(brutenghs, algonghs))
 
             print('  -> Distance: {:.{prec}f}'.format(wrong_edges / (n*count), prec=3))
