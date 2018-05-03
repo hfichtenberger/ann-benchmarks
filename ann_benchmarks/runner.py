@@ -26,7 +26,6 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
     D = get_dataset(dataset)
     X_train = numpy.array(D['train'])
     distance = D.attrs['distance']
-    neighbors = D['neighbors']
     try:
         all_neighbors = D['neighbors_train']
     except:
@@ -37,7 +36,7 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
             bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='auto', metric='l2', n_jobs=4)
             bf_nn.fit(X_train)
             print("Saving all neighbors...")
-            for i in range(neighbors.shape[0]):
+            for i in range(tneighbors.shape[0]):
                 brutenghs = bf_nn.kneighbors([X_train[i, :]], return_distance=False, n_neighbors=100)
                 tneighbors[i, :] = brutenghs
             f.create_dataset('neighbors_train', data=tneighbors)
@@ -64,6 +63,9 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
             for i in range(n):
                 algonghs = algo.query(X_train[i], count)
                 brutenghs = all_neighbors[i, : count]
+                print(algonghs)
+                print(brutenghs)
+                print()
                 wrong_edges += len(numpy.setdiff1d(brutenghs, algonghs))
 
             print('  -> Distance: {:.{prec}f}'.format(wrong_edges / (n*count), prec=3))
