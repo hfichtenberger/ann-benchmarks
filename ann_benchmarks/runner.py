@@ -44,10 +44,10 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
         
     print('Got a train set of size (%d * %d)' % X_train.shape)
     try:
-        t0 = time.time()
+        t0 = time.clock()
         index_size_before = algo.get_index_size("self")
         algo.fit(X_train)
-        build_time = time.time() - t0
+        build_time = time.clock() - t0
         index_size = algo.get_index_size("self") - index_size_before
         print('Built index in', build_time)
         print('Index size: ', index_size)
