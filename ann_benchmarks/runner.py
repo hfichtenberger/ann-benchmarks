@@ -33,7 +33,7 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
         filename = D.filename
         with h5py.File(filename, 'a') as f:
             tneighbors = numpy.empty((X_train.shape[0], 100))
-            bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='auto', metric='l2', n_jobs=4)
+            bf_nn = sklearn.neighbors.NearestNeighbors(algorithm='auto', metric='l2', n_jobs=-1)
             bf_nn.fit(X_train)
             print("Saving all neighbors...")
             for i in range(tneighbors.shape[0]):
