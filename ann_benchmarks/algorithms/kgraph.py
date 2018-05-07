@@ -24,9 +24,10 @@ class KGraph(BaseANN):
             self._kgraph.load(path)
         else:
             self._kgraph.build(**self._index_params) #iterations=30, L=100, delta=0.002, recall=0.99, K=25)
-            if not os.path.exists(INDEX_DIR):
-              os.makedirs(INDEX_DIR)
-            self._kgraph.save(path)
+            if self._save_index:
+                if not os.path.exists(INDEX_DIR):
+                  os.makedirs(INDEX_DIR)
+                self._kgraph.save(path)
 
     def query(self, v, n):
         if v.dtype != numpy.float32:
