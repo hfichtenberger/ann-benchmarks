@@ -65,7 +65,7 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
                 brutenghs = all_neighbors[i, : count]
                 wrong_edges += len(numpy.setdiff1d(brutenghs, algonghs))
 
-            print('  -> Distance: {:.{prec}f}'.format(wrong_edges / (n*count), prec=3))
+            print('  -> Distance: {:.{prec}f}'.format(wrong_edges / (n*count), prec=10))
 
             print('  Testing...')
             
@@ -86,7 +86,7 @@ def run(definition, dataset, count, run_count=3, force_single=False, use_batch_q
                     toa.c2 = y
                     result = toa.test(ga, count, 0.5)
                     print('  -> Decision {} in time {:.{prec}f}, query time of that {:.{prec}f}, with c1={:.{prec}f}, c2={:.{prec}f}'
-                          .format(result.decision, result.total_time, result.query_time, x, y, prec=5))
+                          .format(result.decision, result.total_time, result.query_time, x, y, prec=10))
 
         #store_results(dataset, count, definition, attrs, results)
     finally:

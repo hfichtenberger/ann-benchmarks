@@ -8,7 +8,7 @@ from ann_benchmarks.algorithms.base import BaseANN
 class NmslibReuseIndex(BaseANN):
     @staticmethod
     def encode(d):
-        return ["%s=%s" % (a, b) for (a, b) in d.iteritems()]
+        return ["%s=%s" % (a, b) for (a, b) in d.items()]
 
     def __init__(self, metric, method_name, index_param, save_index, query_param):
         self._nmslib_metric = {'angular': 'cosinesimil', 'euclidean': 'l2'}[metric]
